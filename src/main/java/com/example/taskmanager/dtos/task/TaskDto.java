@@ -19,14 +19,6 @@ public class TaskDto {
     private Date updated;
     private Status status;
 
-    public TaskDto(String title, String description, Status status) {
-        this.title = title;
-        this.description = description;
-        this.status = status;
-        this.created = new Date(System.currentTimeMillis());
-        this.updated = new Date(System.currentTimeMillis());
-    }
-
     public TaskDto() {
     }
 }

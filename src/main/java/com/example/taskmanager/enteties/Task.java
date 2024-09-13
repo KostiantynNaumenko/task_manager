@@ -24,14 +24,6 @@ public class Task {
     private Date created;
     private Date updated;
 
-    public Task(String title, String description, Status status) {
-        this.title = title;
-        this.description = description;
-        this.status = status;
-        this.created = new Date(System.currentTimeMillis());
-        this.updated = new Date(System.currentTimeMillis());
-    }
-
     public Task() {
     }
 }
