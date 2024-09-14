@@ -43,6 +43,8 @@ public class TaskServiceImpl implements TaskService {
         if (task.getId() != null) {
             throw new EntityExistsException("Task already exists");
         }
+        task.setCreated(getCurrentDate());
+        task.setUpdated(getCurrentDate());
         return taskRepository.save(taskMappingUtils.mapToTaskEntity(task)).getId();
     }
 
