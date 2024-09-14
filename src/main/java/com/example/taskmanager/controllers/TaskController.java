@@ -3,6 +3,7 @@ package com.example.taskmanager.controllers;
 import com.example.taskmanager.dtos.task.TaskDto;
 import com.example.taskmanager.enteties.enums.Status;
 import com.example.taskmanager.services.TaskService;
+import jakarta.persistence.EntityExistsException;
 import lombok.val;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +16,7 @@ public class TaskController {
     private final static String UPDATED = "Task with ID: %s was successfully updated";
     private final static String DELETED = "Task with ID: %s was successfully deleted";
     private final static String NOT_UPDATED = "Task with ID: %s was not updated";
+    private final static String ALREADY_EXISTS = "Task with ID: %s already exists";
 
     private final TaskService taskService;
 
@@ -28,8 +30,14 @@ public class TaskController {
     }
 
     @PostMapping
-    public Long addTask(@RequestBody TaskDto taskDto) {
-        return taskService.createTask(taskDto);
+    public String addTask(@RequestBody TaskDto taskDto) {
+        Long id;
+        try {
+            id = taskService.createTask(taskDto);
+            return id.toString();
+        } catch (EntityExistsException e) {
+            return String.format(ALREADY_EXISTS, taskDto.getId());
+        }
     }
 
     @PutMapping
