@@ -19,7 +19,9 @@ public class TaskController {
     private final static String NOT_DELETED = "Task with ID: %s was not found to be deleted";
     private final static String NOT_UPDATED_BECAUSE_NOT_FOUND = "Task with ID: %s was not found to be updated";
     private final static String NOT_UPDATED_BECAUSE_WRONG_FORMAT = "Task with ID: %s can't be updated because status: %s is not valid";
+    private final static String NOT_UPDATED_BECAUSE_TOO_MANY_TASKS = "Task with ID: %s can't be updated because to many task with status: %s";
     private final static String ALREADY_EXISTS = "Task with ID: %s or title: %s already exists";
+    private final static String TO_MANY_TASKS = "Too many tasks with this status: %s";
 
     private final TaskService taskService;
 
@@ -40,6 +42,10 @@ public class TaskController {
         } catch (EntityExistsException e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             return String.format(ALREADY_EXISTS, taskDto.getId(), taskDto.getTitle());
+        } catch (UnsupportedOperationException e)
+        {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return String.format(TO_MANY_TASKS, Status.TODO);
         }
     }
 
@@ -54,12 +60,16 @@ public class TaskController {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return String.format(NOT_UPDATED_BECAUSE_WRONG_FORMAT, id, status);
         }
+
         try {
             taskService.updateTaskStatus(id, statusEnum);
             return String.format(UPDATED, id);
         } catch (EntityNotFoundException e) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return String.format(NOT_UPDATED_BECAUSE_NOT_FOUND, id);
+        } catch (UnsupportedOperationException e) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return String.format(NOT_UPDATED_BECAUSE_TOO_MANY_TASKS, id, status);
         }
     }
 
