@@ -46,7 +46,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Long createTask(TaskDto task) {
-        if (task.getId() != null || taskRepository.existsTasksByTitle(task.getTitle())) {
+        if (taskRepository.existsTasksByTitle(task.getTitle())) {
             throw new EntityExistsException("Task already exists");
         }
         int numberOfTasksInTODO = taskRepository.countTasksByStatus(Status.TODO);

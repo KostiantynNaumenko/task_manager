@@ -1,10 +1,19 @@
 package com.example.taskmanager.dtos.task;
 
 import com.example.taskmanager.enteties.Task;
+import com.example.taskmanager.enteties.enums.Status;
 import org.springframework.stereotype.Component;
 
 @Component
 public class TaskMappingUtils {
+
+    public TaskDto taskRequestToDto(TaskRequest task) {
+        TaskDto taskDto = new TaskDto();
+        taskDto.setTitle(task.getTitle());
+        taskDto.setDescription(task.getDescription());
+        taskDto.setStatus(Status.TODO);
+        return taskDto;
+    }
 
     public Task mapToTaskEntity(TaskDto task) {
         Task taskEntity = new Task();

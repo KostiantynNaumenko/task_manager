@@ -1,6 +1,7 @@
 package com.example.taskmanager.controllers;
 
 import com.example.taskmanager.dtos.task.TaskDto;
+import com.example.taskmanager.dtos.task.TaskMappingUtils;
 import com.example.taskmanager.enteties.enums.Status;
 import com.example.taskmanager.services.TaskService;
 import jakarta.persistence.EntityExistsException;
@@ -36,6 +37,8 @@ class TaskControllerTest {
     private MockMvc mvc;
     @MockBean
     private TaskService taskServiceMock;
+    @MockBean
+    private TaskMappingUtils taskMappingUtilsMock;
 
     private static final String POST_JSON = """
             {
@@ -67,6 +70,7 @@ class TaskControllerTest {
 
     @Test
     void addTask_validInput() throws Exception {
+        when(taskMappingUtilsMock.taskRequestToDto(any())).thenReturn(new TaskDto());
         when(taskServiceMock.createTask(any())).thenReturn(1L);
         mvc.perform(post("/tasks")
                         .with(user("admin").password("password"))
@@ -78,6 +82,7 @@ class TaskControllerTest {
 
     @Test
     void addTask_invalidInput() throws Exception {
+        when(taskMappingUtilsMock.taskRequestToDto(any())).thenReturn(new TaskDto());
         when(taskServiceMock.createTask(any())).thenReturn(1L);
         mvc.perform(post("/tasks")
                         .with(user("admin").password("pass"))
@@ -88,13 +93,14 @@ class TaskControllerTest {
 
     @Test
     void addTask_entityExists() throws Exception {
+        when(taskMappingUtilsMock.taskRequestToDto(any())).thenReturn(new TaskDto());
         when(taskServiceMock.createTask(any())).thenThrow(new EntityExistsException());
         mvc.perform(post("/tasks")
                         .with(user("admin").password("pass"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(POST_JSON))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string("Task with ID: 1 or title: title already exists"));
+                .andExpect(content().string("Task with title: title already exists"));
     }
 
     @Test
