@@ -8,7 +8,7 @@ public class TaskMappingUtils {
 
     public Task mapToTaskEntity(TaskDto task) {
         Task taskEntity = new Task();
-        task.setId(task.getId());
+        taskEntity.setId(task.getId());
         taskEntity.setTitle(task.getTitle());
         taskEntity.setDescription(task.getDescription());
         taskEntity.setStatus(task.getStatus());

@@ -4,7 +4,6 @@ import com.example.taskmanager.enteties.enums.Status;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.sql.Date;
 
 @Data
@@ -20,5 +19,21 @@ public class TaskDto {
     private Status status;
 
     public TaskDto() {
+    }
+
+    public TaskDto(String title, String description)
+    {
+        this.title = title;
+        this.description = description;
+    }
+
+    public TaskDto(Long id, String title, String description, Date created, Date updated, Status status)
+    {
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.created = created;
+        this.updated = updated;
+        this.status = status;
     }
 }

@@ -4,7 +4,8 @@ import com.example.taskmanager.dtos.task.TaskDto;
 import com.example.taskmanager.enteties.enums.Status;
 import com.example.taskmanager.services.TaskService;
 import jakarta.persistence.EntityExistsException;
-import lombok.val;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,7 +16,9 @@ public class TaskController {
 
     private final static String UPDATED = "Task with ID: %s was successfully updated";
     private final static String DELETED = "Task with ID: %s was successfully deleted";
-    private final static String NOT_UPDATED = "Task with ID: %s was not updated";
+    private final static String NOT_DELETED = "Task with ID: %s was not found to be deleted";
+    private final static String NOT_UPDATED_BECAUSE_NOT_FOUND = "Task with ID: %s was not found to be updated";
+    private final static String NOT_UPDATED_BECAUSE_WRONG_FORMAT = "Task with ID: %s can't be updated because status: %s is not valid";
     private final static String ALREADY_EXISTS = "Task with ID: %s already exists";
 
     private final TaskService taskService;
@@ -29,42 +32,59 @@ public class TaskController {
         return taskService.getAllTasks();
     }
 
-    @PostMapping
-    public String addTask(@RequestBody TaskDto taskDto) {
-        Long id;
+    @PostMapping(consumes="application/json")
+    public String addTask(@RequestBody TaskDto taskDto, HttpServletResponse response) {
         try {
-            id = taskService.createTask(taskDto);
+            Long id = taskService.createTask(taskDto);
             return id.toString();
         } catch (EntityExistsException e) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             return String.format(ALREADY_EXISTS, taskDto.getId());
         }
     }
 
     @PutMapping
     public String updateTaskStatus(@RequestParam Long id,
-                                   @RequestParam String status) {
-        Status statusEnum = Status.valueOf(status);
-        val taskDto = taskService.updateTaskStatus(id, statusEnum);
-        if (taskDto != null) {
-            return String.format(UPDATED, id);
+                                   @RequestParam String status,
+                                   HttpServletResponse response) {
+        Status statusEnum;
+        try {
+            statusEnum = Status.valueOf(status);
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return String.format(NOT_UPDATED_BECAUSE_WRONG_FORMAT, id, status);
         }
-        return String.format(NOT_UPDATED, id);
+        try {
+            taskService.updateTaskStatus(id, statusEnum);
+            return String.format(UPDATED, id);
+        } catch (EntityNotFoundException e) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return String.format(NOT_UPDATED_BECAUSE_NOT_FOUND, id);
+        }
     }
 
     @PatchMapping
     public String patchTaskFields(@RequestParam Long id,
                                   @RequestParam String title,
-                                  @RequestParam String description) {
-        val taskDto = taskService.updateTaskFields(id, title, description);
-        if (taskDto != null) {
+                                  @RequestParam String description,
+                                  HttpServletResponse response) {
+        try {
+            taskService.updateTaskFields(id, title, description);
             return String.format(UPDATED, id);
+        } catch (EntityNotFoundException e) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return String.format(NOT_UPDATED_BECAUSE_NOT_FOUND, id);
         }
-        return String.format(NOT_UPDATED, id);
     }
 
     @DeleteMapping
-    public String deleteTask(@RequestParam Long id) {
-        taskService.deleteTask(id);
-        return String.format(DELETED, id);
+    public String deleteTask(@RequestParam Long id, HttpServletResponse response) {
+       try {
+           taskService.deleteTask(id);
+           return String.format(DELETED, id);
+       } catch (EntityNotFoundException e) {
+           response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+           return String.format(NOT_DELETED, id);
+       }
     }
 }
