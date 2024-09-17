@@ -1,6 +1,8 @@
 package com.example.taskmanager.controllers;
 
 import com.example.taskmanager.dtos.task.TaskDto;
+import com.example.taskmanager.dtos.task.TaskMappingUtils;
+import com.example.taskmanager.dtos.task.TaskRequest;
 import com.example.taskmanager.enteties.enums.Status;
 import com.example.taskmanager.services.TaskService;
 import jakarta.persistence.EntityExistsException;
@@ -20,13 +22,15 @@ public class TaskController {
     private final static String NOT_UPDATED_BECAUSE_NOT_FOUND = "Task with ID: %s was not found to be updated";
     private final static String NOT_UPDATED_BECAUSE_WRONG_FORMAT = "Task with ID: %s can't be updated because status: %s is not valid";
     private final static String NOT_UPDATED_BECAUSE_TOO_MANY_TASKS = "Task with ID: %s can't be updated because to many task with status: %s";
-    private final static String ALREADY_EXISTS = "Task with ID: %s or title: %s already exists";
+    private final static String ALREADY_EXISTS = "Task with title: %s already exists";
     private final static String TO_MANY_TASKS = "Too many tasks with this status: %s";
 
     private final TaskService taskService;
+    private final TaskMappingUtils taskMappingUtils;
 
-    public TaskController(TaskService taskService) {
+    public TaskController(TaskService taskService, TaskMappingUtils taskMappingUtils) {
         this.taskService = taskService;
+        this.taskMappingUtils = taskMappingUtils;
     }
 
     @GetMapping
@@ -35,13 +39,13 @@ public class TaskController {
     }
 
     @PostMapping(consumes="application/json")
-    public String addTask(@RequestBody TaskDto taskDto, HttpServletResponse response) {
+    public String addTask(@RequestBody TaskRequest taskRequest, HttpServletResponse response) {
         try {
-            Long id = taskService.createTask(taskDto);
+            Long id = taskService.createTask(taskMappingUtils.taskRequestToDto(taskRequest));
             return id.toString();
         } catch (EntityExistsException e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            return String.format(ALREADY_EXISTS, taskDto.getId(), taskDto.getTitle());
+            return String.format(ALREADY_EXISTS, taskRequest.getTitle());
         } catch (UnsupportedOperationException e)
         {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);

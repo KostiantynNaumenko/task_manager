@@ -97,7 +97,8 @@ class TaskServiceImplTest {
 
     @Test
     public void createTask_InvalidTask() {
-        TaskDto taskDto = new TaskDto(1L, "New Task Title", "New Task Description", null, null, null);
+        TaskDto taskDto = new TaskDto(null, "New Task Title", "New Task Description", null, null, null);
+        when(taskRepositoryMock.existsTasksByTitle(anyString())).thenReturn(true);
         try {
             taskServiceImpl.createTask(taskDto);
             assert false;
