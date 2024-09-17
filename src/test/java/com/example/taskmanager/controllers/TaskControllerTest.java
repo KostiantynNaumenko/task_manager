@@ -40,8 +40,8 @@ class TaskControllerTest {
     private static final String POST_JSON = """
             {
                 "id" : 1,
-                "title" : "awdaw",
-                "description" : "awdawd",
+                "title" : "title",
+                "description" : "description",
                 "status" : "TODO",
                 "created" : null,
                 "updated" : null
@@ -94,7 +94,7 @@ class TaskControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(POST_JSON))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string("Task with ID: 1 already exists"));
+                .andExpect(content().string("Task with ID: 1 or title: title already exists"));
     }
 
     @Test

@@ -41,7 +41,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Long createTask(TaskDto task) {
-        if (task.getId() != null) {
+        if (task.getId() != null || taskRepository.existsTasksByTitle(task.getTitle())) {
             throw new EntityExistsException("Task already exists");
         }
         task.setCreated(getCurrentDate());
