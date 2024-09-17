@@ -16,13 +16,13 @@ import static org.junit.jupiter.api.Assertions.*;
 class TaskRepositoryTest {
 
     @Autowired
-    private TaskRepository underTest;
+    private TaskRepository taskRepository;
 
     private Task task;
 
     @AfterEach
     void tearDown() {
-        underTest.deleteAll();
+        taskRepository.deleteAll();
     }
 
     @BeforeEach
@@ -37,19 +37,26 @@ class TaskRepositoryTest {
 
     @Test
     void givenTaskObject_whenSave_thenCountTaskByStatusShouldChange() {
-        //Given
-        int givenInTodo = underTest.countTasksByStatus(Status.TODO);
+        int givenInTodo = taskRepository.countTasksByStatus(Status.TODO);
 
-        // When
-        underTest.save(task);
-        int whenInTodo = underTest.countTasksByStatus(Status.TODO);
+        taskRepository.save(task);
+        int whenInTodo = taskRepository.countTasksByStatus(Status.TODO);
 
-        //Then
         assertEquals(0, givenInTodo);
         assertEquals(1, whenInTodo);
     }
 
-    private Date getCurrentDate() {
+    @Test
+    public void getTaskByTitle() {
+        boolean notExist = taskRepository.existsTasksByTitle(task.getTitle());
+        taskRepository.save(task);
+        boolean exists = taskRepository.existsTasksByTitle(task.getTitle());
+
+        assertTrue(exists);
+        assertFalse(notExist);
+    }
+
+    public Date getCurrentDate() {
         return new Date(System.currentTimeMillis());
     }
 }
