@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.env.Environment;
 
 import java.sql.Date;
 import java.util.ArrayList;
@@ -26,20 +27,24 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TaskServiceImplTest {
+
     private static TaskServiceImpl taskServiceImpl;
 
     @Mock
+    private Environment environment;
+    @Mock
     private TaskRepository taskRepositoryMock;
-
     @Mock
     private TaskMappingUtils taskMappingUtilsMock;
+
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(TaskServiceImplTest.class);
+        assertNotNull(environment);
         assertNotNull(taskRepositoryMock);
         assertNotNull(taskMappingUtilsMock);
-        taskServiceImpl = new TaskServiceImpl(taskMappingUtilsMock, taskRepositoryMock);
+        taskServiceImpl = new TaskServiceImpl(taskMappingUtilsMock, taskRepositoryMock, environment);
         assertNotNull(taskServiceImpl);
 
     }
@@ -84,6 +89,7 @@ class TaskServiceImplTest {
                 .thenReturn(new Task("New Task Title", "New Task Description"));
         when(taskRepositoryMock.save(any(Task.class)))
                 .thenReturn(new Task(1L, "New Task Title", "New Task Description"));
+        when(environment.getProperty(anyString())).thenReturn("0");
         Long taskId = taskServiceImpl.createTask(taskDto);
         verify(taskRepositoryMock, times(1)).save(any(Task.class));
         assertEquals(taskId, 1L);
@@ -101,7 +107,21 @@ class TaskServiceImplTest {
     }
 
     @Test
+    public void createTask_tooManyTasks() {
+        TaskDto taskDto = new TaskDto(null, "New Task Title", "New Task Description", null, null, null);
+        when(environment.getProperty(anyString())).thenReturn("0");
+        when(taskRepositoryMock.countTasksByStatus(any(Status.class))).thenReturn(1);
+        try {
+            taskServiceImpl.createTask(taskDto);
+            assert false;
+        } catch (UnsupportedOperationException e) {
+            verify(taskRepositoryMock, never()).save(any(Task.class));
+        }
+    }
+
+    @Test
     public void updateTaskStatus_ValidTask() {
+        when(environment.getProperty(anyString())).thenReturn("0");
         when(taskRepositoryMock.findById(1L)).thenReturn(Optional.of(new Task()));
         when(taskRepositoryMock.save(any(Task.class))).thenReturn(new Task());
         taskServiceImpl.updateTaskStatus(1L, Status.IN_PROGRESS);
@@ -117,6 +137,19 @@ class TaskServiceImplTest {
             assert false;
         } catch (EntityNotFoundException e) {
             verify(taskRepositoryMock, times(1)).findById(1L);
+            verify(taskRepositoryMock, never()).save(any(Task.class));
+        }
+    }
+
+    @Test
+    public void updateTaskStatus_tooManyTasks() {
+        when(environment.getProperty(anyString())).thenReturn("0");
+        when(taskRepositoryMock.findById(1L)).thenReturn(Optional.of(new Task()));
+        when(taskRepositoryMock.countTasksByStatus(any(Status.class))).thenReturn(1);
+        try {
+            taskServiceImpl.updateTaskStatus(1L, Status.IN_PROGRESS);
+            assert false;
+        } catch (UnsupportedOperationException e) {
             verify(taskRepositoryMock, never()).save(any(Task.class));
         }
     }

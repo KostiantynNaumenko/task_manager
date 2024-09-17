@@ -98,6 +98,17 @@ class TaskControllerTest {
     }
 
     @Test
+    void addTask_tooManyTasks() throws Exception {
+        when(taskServiceMock.createTask(any())).thenThrow(new UnsupportedOperationException());
+        mvc.perform(post("/tasks")
+                        .with(user("admin").password("pass"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(POST_JSON))
+                .andExpect(status().isForbidden())
+                .andExpect(content().string("Too many tasks with this status: TODO"));
+    }
+
+    @Test
     void updateTaskStatus_success() throws Exception {
         when(taskServiceMock.updateTaskStatus(1L, Status.IN_PROGRESS)).thenReturn(new TaskDto(
                 1L, null, null, null, null, null));
@@ -119,6 +130,18 @@ class TaskControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("Task with ID: 1 was not found to be updated"));
     }
+    //Task with ID: %s can't be updated because to many task with status: %s
+    @Test
+    void updateTaskStatus_tooManyTasks() throws Exception {
+        when(taskServiceMock.updateTaskStatus(1L, Status.IN_PROGRESS)).thenThrow(new UnsupportedOperationException());
+        mvc.perform(put("/tasks")
+                        .with(user("admin").password("pass"))
+                        .param("id", String.valueOf(1))
+                        .param("status", "IN_PROGRESS"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().string("Task with ID: 1 can't be updated because to many task" +
+                        " with status: IN_PROGRESS"));
+    }
 
     @Test
     void updateTaskStatus_wrongParams() throws Exception {
@@ -128,7 +151,8 @@ class TaskControllerTest {
                         .param("id", String.valueOf(1))
                         .param("status", "WRONG_STATUS"))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Task with ID: 1 can't be updated because status: WRONG_STATUS is not valid"));
+                .andExpect(content().string("Task with ID: 1 can't be updated because status:" +
+                        " WRONG_STATUS is not valid"));
     }
 
     @Test
